@@ -1,0 +1,39 @@
+{
+  "name": "func",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "lint": "eslint frontend/**/*.vue frontend/**/*.ts backend/**/*.ts",
+    "test": "npm run lint && npm run test:unit && npm run test:docker",
+    "test:unit": "vitest --run",
+    "test:watch": "vitest",
+    "test:coverage": "npm run test:unit -- --coverage",
+    "test:docker": "docker build .",
+    "build": "tsc",
+    "build:docker": "docker build -t joschi64/func:latest .",
+    "docker:push": "docker push joschi64/func:latest",
+    "publish": "npm run build:docker && npm run docker:push",
+    "update": "npx -y npm-check-updates -d -u -e 2",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.5.7",
+    "@types/supertest": "^2.0.12",
+    "eslint": "^8.48.0",
+    "prettier": "^3.0.3",
+    "prettier-eslint": "^15.0.1",
+    "supertest": "^6.3.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.3"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
