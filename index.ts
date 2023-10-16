@@ -1,23 +1,19 @@
-import { setupServer } from "./lib/server/ServerHelper"
-import RouterHelper from "./lib/server/RouterHelper.js"
+import { LogLevel, middlewares, routerBuilder, setupServer } from "useful-typescript-functions"
 
-const { createRouter } = RouterHelper()
-const port = +(process.env.PORT || "3000")
+const requestLogger = middlewares.requestLogger(
+  console,
+  (process.env.LOGLEVEL as LogLevel) || "warn",
+)
 
-setupServer(setupRouters, { port })
+const subscriptionRouter = routerBuilder("/subscriptions", "subscriptions")
+  .post("/", req => createSubscription(req.body.email, req.body.dest))
+  .build()
 
-function setupRouters() {
-  return createRouter({
-    "/subscriptions": {
-      post: [
-        async (req) => {
-          return await createSubscription(req.body.email, req.body.dest)
-        },
-      ],
-    },
-  })
-}
+await setupServer({
+  port: +(process.env.PORT || "3000"),
+  middlewares: [requestLogger, subscriptionRouter],
+})
 
 async function createSubscription(email: string, dest: string) {
-  console.log({ func: "createSubscription", email, dest })
+  return { func: "createSubscription", email, dest }
 }
