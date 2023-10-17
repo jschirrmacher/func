@@ -1,19 +1,17 @@
-import { LogLevel, middlewares, routerBuilder, setupServer } from "useful-typescript-functions"
+import Mustache from "mustache"
+import { LogLevel, middlewares, setupServer } from "useful-typescript-functions"
+
+import config from "./config.mjs"
+import SubscriptionRouterFactory from "./src/Subscriptions.js"
 
 const requestLogger = middlewares.requestLogger(
   console,
   (process.env.LOGLEVEL as LogLevel) || "warn",
 )
 
-const subscriptionRouter = routerBuilder("/subscriptions", "subscriptions")
-  .post("/", req => createSubscription(req.body.email, req.body.dest))
-  .build()
+const subscriptionRouter = SubscriptionRouterFactory(config.backend, Mustache.render)
 
 await setupServer({
   port: +(process.env.PORT || "3000"),
   middlewares: [requestLogger, subscriptionRouter],
 })
-
-async function createSubscription(email: string, dest: string) {
-  return { func: "createSubscription", email, dest }
-}

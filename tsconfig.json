@@ -13,14 +13,11 @@
     "allowSyntheticDefaultImports": true,
     "lib": ["ESNext"],
     "skipLibCheck": true,
-    "noEmit": true,
     "sourceMap": true,
-    "typeRoots": ["node_modules/@types"]
+    "typeRoots": ["node_modules/@types", "@types"],
+    "allowJs": true
   },
-  "include": [
-    "**/*.ts",
-    "express.d.ts"
-  ],
+  "include": ["src/**/*.ts", "@types/**/*.ts", "index.ts", "config.mjs"],
   "ts-node": {
     "esm": true,
     "transpileOnly": true,

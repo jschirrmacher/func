@@ -8,4 +8,5 @@ parserOptions:
 plugins:
   - "@typescript-eslint"
 extends:
+  - "plugin:@typescript-eslint/recommended"
   - "prettier"
