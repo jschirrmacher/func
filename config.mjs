@@ -1,7 +1,7 @@
 export default {
   backend: {
-    emailFrom: "joachim@localhost",
-    baseUrl: "http://localhost:5173",
+    emailFrom: "newsletter@my-server.org",
+    baseUrl: "http://localhost:3000",
     smtp: {
       host: "smtp.ethereal.email",
       port: 587,
@@ -14,9 +14,9 @@ export default {
     subscriptionTargets: [
       {
         name: "myWebsite",
-        recipient: "my-own-address@my-server.org",
+        recipient: "newsletter-admin@my-server.org",
         subject: "[my-website] Registration for newsletter",
-        html: `<p>Dear newsletter admin,</p><p>a new user with the address {{ email }} registered.`,
+        html: `<p>Dear newsletter admin,</p><p>a new user with the address {{ email }} registered at {{ dest }}.`,
       },
     ],
   },

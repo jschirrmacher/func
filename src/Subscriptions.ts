@@ -1,8 +1,8 @@
-import { Logger, RestError, routerBuilder } from "useful-typescript-functions"
+import { Logger, Redirection, RestError, routerBuilder } from "useful-typescript-functions"
 
 import { MailTemplate, Mailer, SMTPConfiguration } from "./lib/Mailer.js"
 
-type SubscriptionTarget = { name: string, recipient: string } & MailTemplate
+type SubscriptionTarget = { name: string; recipient: string } & MailTemplate
 
 type Config = {
   emailFrom: string
@@ -16,18 +16,38 @@ const logger = Logger()
 export default (config: Config, mailer: Mailer) => {
   const subscriptionTargets = config.subscriptionTargets
 
-  async function createSubscription(email: string, dest: string) {
+  async function createSubscription(
+    email: string,
+    dest: string,
+    onSuccess?: string,
+    onError?: string,
+  ) {
     const template = subscriptionTargets.find(target => target.name === dest)
     if (template === undefined) {
       logger.error(`destination: '${dest}' not found`)
       throw new RestError(404, `Destination not found`)
     }
-    await mailer.send(template.recipient, template, { email, dest })
-    return { registered: true }
+    try {
+      await mailer.send(template.recipient, template, { email, dest })
+      if (onSuccess) {
+        throw new Redirection(onSuccess)
+      } else {
+        return { registered: true }
+      }
+    } catch (error) {
+      if (onError) {
+        throw new Redirection(onError)
+      } else {
+        throw new RestError(500, `Error sending email: ${(error as Error).message}`)
+      }
+    }
   }
 
   const router = routerBuilder("/subscriptions", "subscriptions")
-    .post("/", req => createSubscription(req.body.email, req.body.dest))
+    .post("/", req => {
+      const { email, dest, onSuccess, onError } = req.body
+      return createSubscription(email, dest, onSuccess, onError)
+    })
     .build()
 
   return { router, createSubscription }
