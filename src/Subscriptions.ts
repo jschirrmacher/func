@@ -11,9 +11,9 @@ type Config = {
   subscriptionTargets: SubscriptionTarget[]
 }
 
-const logger = Logger()
+type Logger = Pick<typeof console, "error">
 
-export default (config: Config, mailer: Mailer) => {
+export default (config: Config, mailer: Mailer, logger: Logger = Logger()) => {
   const subscriptionTargets = config.subscriptionTargets
 
   async function createSubscription(
@@ -29,9 +29,7 @@ export default (config: Config, mailer: Mailer) => {
     }
     try {
       await mailer.send(template.recipient, template, { email, dest })
-      if (onSuccess) {
-        throw new Redirection(onSuccess)
-      } else {
+      if (!onSuccess) {
         return { registered: true }
       }
     } catch (error) {
@@ -41,6 +39,7 @@ export default (config: Config, mailer: Mailer) => {
         throw new RestError(500, `Error sending email: ${(error as Error).message}`)
       }
     }
+    throw new Redirection(onSuccess)
   }
 
   const router = routerBuilder("/subscriptions", "subscriptions")

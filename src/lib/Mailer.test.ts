@@ -2,14 +2,14 @@ import type NodeMailer from "nodemailer"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { Logger } from "useful-typescript-functions"
-import { MailerFactory } from "./Mailer.js"
+import { MailerConfig, MailerFactory, RenderFunction } from "./Mailer.js"
 
 const john = "john@skynet.com"
 const template = { subject: "Mail to {{name}}", html: "Dear {{name}}" }
 const variables = { name: "John" }
 const logger = Logger()
 
-const config = {
+const testConfig = {
   emailFrom: "me@localhost",
   baseUrl: "http://localhost",
   port: 80,
@@ -23,7 +23,7 @@ const config = {
   },
 }
 
-function setup(sendResult: "none" | "ok" | "error" = "ok") {
+function setup(sendResult: "none" | "ok" | "error" = "ok", config: MailerConfig = testConfig) {
   const sendMailErr = sendResult === "ok" ? null : "sendMail failed"
   if (sendResult !== "none") {
     logger.expect({
@@ -39,8 +39,8 @@ function setup(sendResult: "none" | "ok" | "error" = "ok") {
 
   const createTransport = vi.fn().mockReturnValue({ sendMail })
   const mailer = { createTransport } as unknown as typeof NodeMailer
-  const render = (template: string, view: any) =>
-    template.replace(/\{\{(\w+)}}/gs, (t, k) => view[k])
+  const render: RenderFunction = (template, vars) =>
+    template.replace(/\{\{(\w+)}}/gs, (t, k: string) => vars[k])
   const { send } = MailerFactory(mailer, render, logger, config)
 
   return { sendMail, send, createTransport }
@@ -94,5 +94,15 @@ describe("Mailer", () => {
   it("should log errors", async () => {
     const { send } = setup("error")
     expect(send(john, template, variables)).rejects.toEqual(new Error("sendMail failed"))
+  })
+
+  it("should suppress email sending if smtp config is missing", async () => {
+    logger.expect({
+      level: "info",
+      message: "mailto(john@skynet.com), Mail to John: suppressed\nDear John",
+    })
+    const { send, sendMail } = setup("none", {})
+    await send(john, template, variables)
+    expect(sendMail).not.toBeCalled()
   })
 })

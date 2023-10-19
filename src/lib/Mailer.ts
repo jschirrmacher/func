@@ -23,7 +23,7 @@ export type MailerConfig = {
   smtp?: SMTPConfiguration
 }
 
-type RenderFunction = (template: string, view: unknown) => string
+export type RenderFunction = (template: string, view: Record<string, string>) => string
 type Logger = Pick<typeof console, "warn" | "info">
 
 export function MailerFactory(
