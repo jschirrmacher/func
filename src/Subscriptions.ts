@@ -1,6 +1,12 @@
-import { Logger, Redirection, RestError, routerBuilder } from "useful-typescript-functions"
-
-import { MailTemplate, Mailer, SMTPConfiguration } from "./lib/Mailer.js"
+import {
+  Logger,
+  Redirection,
+  RestError,
+  routerBuilder,
+  type MailTemplate,
+  type Mailer,
+  type SMTPConfiguration,
+} from "useful-typescript-functions"
 
 type SubscriptionTarget = { name: string; recipient: string } & MailTemplate
 
