@@ -10,11 +10,17 @@ Currently, there is only just one such function, the sending of emails to a regi
 
 First, edit the `config.mjs` file to match your needs.
 
+Then, create a `data` folder to hold temporary data.
+
 The easiest way to run this service is to use the docker image:
 
 ```shell
-docker run -p 3000:3000 -v $(pwd)/config.mjs:/app/config.mjs joschi64/func
+docker run -p 3000:3000 -v $(pwd)/config.mjs:/app/config.mjs -v $(pwd)/data:/app/data joschi64/func
 ```
+
+Alternatively, it is possible to install Node.js locally, `npm install` and then run `npm run dev` for a development version.
+
+You can also build a compiled production version via `npm run build` and then start the service with `npm start`.
 
 You should use a reverse proxy to make port 3000 available on a server on the internet, ideally with the use of https protocol. Examples for such reverse proxies are nginx or kong api gateway, which uses nginx under the hood, but provides a lot of tools to configure access to the proxied services.
 
