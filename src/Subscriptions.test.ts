@@ -1,6 +1,6 @@
 import express from "express"
 import request from "supertest"
-import { Logger, Redirection } from "useful-typescript-functions"
+import { Logger, Mailer, Redirection } from "useful-typescript-functions"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import Subscriptions from "./Subscriptions"
@@ -36,6 +36,15 @@ const logger = Logger()
 const errorSender = vi.fn(() => {
   throw new Error("Test error")
 })
+const errorMailer = { send: errorSender }
+
+function setupErrorTest(config: BackendConfig, mailer: Mailer) {
+  const { createSubscription, confirmSubscription } = Subscriptions(config, mailer, logger)
+  return {
+    subscription: createSubscription("website", recipient),
+    confirmation: confirmSubscription("website", "abc-def"),
+  }
+}
 
 describe("Subscriptions", () => {
   beforeEach(() => {
@@ -50,11 +59,17 @@ describe("Subscriptions", () => {
     app.use(express.urlencoded({ extended: false }))
     app.use(express.json())
     app.use(router)
+
     const result = await request(app)
       .post("/subscriptions/website")
       .send({ email: "user@somewhere" })
       .expect(200)
     expect(result.body).toEqual({ success: true })
+
+    const otherResult = await request(app)
+      .get("/subscriptions/website/confirmations/abc-def")
+      .expect(200)
+    expect(otherResult.body).toEqual({ success: true })
   })
 
   it("should send an email to the recipient", async () => {
@@ -64,7 +79,31 @@ describe("Subscriptions", () => {
     expect(send).toBeCalledWith(
       recipient,
       target.request,
-      expect.objectContaining({ email: recipient }),
+      expect.objectContaining({ from: target.from, email: recipient }),
+    )
+  })
+
+  it("should send an email with a confirmation link", async () => {
+    const send = vi.fn()
+    const { createSubscription } = Subscriptions(config, { send }, logger)
+    await createSubscription(name, recipient)
+    expect(send).toBeCalledWith(
+      recipient,
+      target.request,
+      expect.objectContaining({
+        link: expect.stringMatching("/subscriptions/website/confirmations/"),
+      }),
+    )
+  })
+
+  it("should send an email to the admin after confirmation", async () => {
+    const send = vi.fn()
+    const { confirmSubscription } = Subscriptions(config, { send }, logger)
+    await confirmSubscription("website", "abc-def")
+    expect(send).toBeCalledWith(
+      target.admin,
+      target.confirm,
+      expect.objectContaining({ from: target.from }),
     )
   })
 
@@ -77,26 +116,27 @@ describe("Subscriptions", () => {
   })
 
   it("should redirect after sending mail", async () => {
-    const url = "http://localhost/success"
     const modifiedConfig = JSON.parse(JSON.stringify(config)) as BackendConfig
-    modifiedConfig.subscriptionTargets.website.request.onSuccess = url
-    const { createSubscription } = Subscriptions(modifiedConfig, { send: vi.fn() }, logger)
-    const promise = createSubscription("website", recipient)
-    expect(promise).rejects.toEqual(new Redirection(url))
+    modifiedConfig.subscriptionTargets.website.request.onSuccess = "http://success"
+    modifiedConfig.subscriptionTargets.website.confirm.onSuccess = "http://success2"
+    const { subscription, confirmation } = setupErrorTest(modifiedConfig, { send: vi.fn() })
+    expect(subscription).rejects.toEqual(new Redirection("http://success"))
+    expect(confirmation).rejects.toEqual(new Redirection("http://success2"))
   })
 
   it("should report errors when sending the mail", async () => {
     logger.expect({ level: "error", message: "Test error" })
-    const { createSubscription } = Subscriptions(config, { send: errorSender }, logger)
-    const promise = createSubscription("website", recipient)
-    expect(promise).rejects.toEqual(new Error("Error sending email: Test error"))
+    const { subscription, confirmation } = setupErrorTest(config, errorMailer)
+    expect(subscription).rejects.toEqual(new Error("Error sending email: Test error"))
+    expect(confirmation).rejects.toEqual(new Error("Error sending email: Test error"))
   })
 
   it("should redirect in case of errors", async () => {
     const modifiedConfig = JSON.parse(JSON.stringify(config)) as BackendConfig
     modifiedConfig.subscriptionTargets.website.request.onError = "http://failure"
-    const { createSubscription } = Subscriptions(modifiedConfig, { send: errorSender }, logger)
-    const promise = createSubscription("website", recipient)
-    expect(promise).rejects.toEqual(new Redirection("http://failure"))
+    modifiedConfig.subscriptionTargets.website.confirm.onError = "http://failure2"
+    const { subscription, confirmation } = setupErrorTest(modifiedConfig, errorMailer)
+    expect(subscription).rejects.toEqual(new Redirection("http://failure"))
+    expect(confirmation).rejects.toEqual(new Redirection("http://failure2"))
   })
 })
