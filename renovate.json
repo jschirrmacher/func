@@ -31,6 +31,13 @@
         "vite",
         "^@vitejs/"
       ]
+    },
+    {
+      "groupName": "supertest",
+      "matchPackagePrefixes": [
+        "supertest",
+        "@types/supertest"
+      ]
     }
   ]
 }
