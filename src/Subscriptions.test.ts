@@ -1,10 +1,11 @@
 import express from "express"
 import request from "supertest"
-import { Logger, Mailer, Redirection } from "useful-typescript-functions"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { Logger, Mailer, Redirection, setupServer } from "useful-typescript-functions"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import Subscriptions from "./Subscriptions"
 import { BackendConfig } from "./types"
+import { Server } from "http"
 
 const recipient = "recipient@website"
 const name = "website"
@@ -47,18 +48,25 @@ function setupErrorTest(config: BackendConfig, mailer: Mailer) {
 }
 
 describe("Subscriptions", () => {
+  let appServer: Server | undefined
+
   beforeEach(() => {
     logger.runInTest(expect)
     vi.mock("fs")
     vi.mock("fs/promises")
   })
 
+  afterEach(() => {
+    appServer?.close()
+    appServer = undefined
+  })
+
   it("should return a router", async () => {
     const { router } = Subscriptions(config, { send: vi.fn() }, logger)
-    const app = express()
+    const { app, server } = await setupServer({ logger, routers: [router] })
+    appServer = server
     app.use(express.urlencoded({ extended: false }))
     app.use(express.json())
-    app.use(router)
 
     const result = await request(app)
       .post("/subscriptions/website")

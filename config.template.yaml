@@ -1,0 +1,36 @@
+backend:
+  emailFrom: me@localhost
+  baseUrl: http://localhost:3000
+  dataDir: data
+  smtp:
+    host: <smpt server>
+    port: 587
+    auth:
+      user: <mail user>
+      pass: <mail user's password>
+
+  subscriptionConfig:
+    test_environment:
+      from: Test mailer<mailer@example.com>
+      recipient: Test admin<admin@example.com>
+      subject: "[List name] Registration"
+      optIn: |
+        <p>Dear {{name}},</p>
+
+        <p>
+          Thank you for your interest in {{title}}!
+          To confirm your email address, click this link:
+        </p>
+        
+        <p>{{link}}</p>
+
+        <p>
+          If you didn't register for {{title}}, you're safe to just ignore and delete this e-mail.
+          We don't store any data about you.
+        </p>
+      confirmed: |
+        <p>Dear Administrator,</p>
+        
+        <p>
+          {{name}} &lt;{{email}}&gt; likes to get news for "Test".
+        </p

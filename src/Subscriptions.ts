@@ -7,8 +7,8 @@ import {
   Logger,
   Redirection,
   RestError,
-  routerBuilder,
   type Mailer,
+  defineRouter,
 } from "useful-typescript-functions"
 import { BackendConfig, MailConfig } from "./types.js"
 
@@ -86,7 +86,12 @@ export default (
     const code = randomUUID()
     const link = `${config.baseUrl}/subscriptions/${targetId}/confirmations/${code}`
     await subscription(targetId, code, email)
-    return await sendMail(email, target.request, { name: target.name, from: target.from, email, link })
+    return await sendMail(email, target.request, {
+      name: target.name,
+      from: target.from,
+      email,
+      link,
+    })
   }
 
   async function confirmSubscription(targetId: string, code: string) {
@@ -100,12 +105,11 @@ export default (
     })
   }
 
-  const router = routerBuilder("/subscriptions", "subscriptions")
+  const router = defineRouter("/subscriptions", "subscriptions")
     .post("/:targetId", req => createSubscription(req.params.targetId, req.body.email))
     .get("/:targetId/confirmations/:code", req =>
       confirmSubscription(req.params.targetId, req.params.code),
     )
-    .build()
 
   return { router, createSubscription, confirmSubscription }
 }

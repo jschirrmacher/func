@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "ts-node index.ts",
+    "dev": "tsx index.ts",
     "lint": "eslint **/*.ts",
     "test": "npm run lint && npm run test:unit && npm run test:docker",
     "test:unit": "vitest --run",
@@ -37,6 +37,7 @@
     "prettier-eslint": "^16.2.0",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
+    "tsx": "4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^1.1.1"
   },
