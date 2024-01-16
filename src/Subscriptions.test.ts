@@ -8,16 +8,16 @@ import { BackendConfig } from "./types"
 import { Server } from "http"
 
 const recipient = "recipient@website"
-const name = "website"
+const title = "website"
 const target = {
-  name,
+  title,
   from: "noreply@my-server",
-  admin: "admin@my-server",
-  request: {
+  recipient: "admin@my-server",
+  optIn: {
     subject: "subscription",
     html: "{{ email }} registered at {{ dest }}",
   },
-  confirm: {
+  confirmed: {
     subject: "subscription",
     html: "{{ email }} registered at {{ dest }}",
   },
@@ -27,7 +27,7 @@ const config: BackendConfig = {
   baseUrl: "http://localhost",
   dataDir: ".",
   smtp: { host: "", port: 0, auth: { user: "", pass: "" } },
-  subscriptionTargets: {
+  subscriptionConfig: {
     website: target,
   },
 }
@@ -83,10 +83,10 @@ describe("Subscriptions", () => {
   it("should send an email to the recipient", async () => {
     const send = vi.fn()
     const { createSubscription } = Subscriptions(config, { send }, logger)
-    await createSubscription(name, recipient)
+    await createSubscription(title, recipient)
     expect(send).toBeCalledWith(
       recipient,
-      target.request,
+      target.optIn,
       expect.objectContaining({ from: target.from, email: recipient }),
     )
   })
@@ -94,10 +94,10 @@ describe("Subscriptions", () => {
   it("should send an email with a confirmation link", async () => {
     const send = vi.fn()
     const { createSubscription } = Subscriptions(config, { send }, logger)
-    await createSubscription(name, recipient)
+    await createSubscription(title, recipient)
     expect(send).toBeCalledWith(
       recipient,
-      target.request,
+      target.optIn,
       expect.objectContaining({
         link: expect.stringMatching("/subscriptions/website/confirmations/"),
       }),
@@ -109,8 +109,8 @@ describe("Subscriptions", () => {
     const { confirmSubscription } = Subscriptions(config, { send }, logger)
     await confirmSubscription("website", "abc-def")
     expect(send).toBeCalledWith(
-      target.admin,
-      target.confirm,
+      target.recipient,
+      target.confirmed,
       expect.objectContaining({ from: target.from }),
     )
   })
@@ -125,8 +125,8 @@ describe("Subscriptions", () => {
 
   it("should redirect after sending mail", async () => {
     const modifiedConfig = JSON.parse(JSON.stringify(config)) as BackendConfig
-    modifiedConfig.subscriptionTargets.website.request.onSuccess = "http://success"
-    modifiedConfig.subscriptionTargets.website.confirm.onSuccess = "http://success2"
+    modifiedConfig.subscriptionConfig.website.optIn.onSuccess = "http://success"
+    modifiedConfig.subscriptionConfig.website.confirmed.onSuccess = "http://success2"
     const { subscription, confirmation } = setupErrorTest(modifiedConfig, { send: vi.fn() })
     expect(subscription).rejects.toEqual(new Redirection("http://success"))
     expect(confirmation).rejects.toEqual(new Redirection("http://success2"))
@@ -141,8 +141,8 @@ describe("Subscriptions", () => {
 
   it("should redirect in case of errors", async () => {
     const modifiedConfig = JSON.parse(JSON.stringify(config)) as BackendConfig
-    modifiedConfig.subscriptionTargets.website.request.onError = "http://failure"
-    modifiedConfig.subscriptionTargets.website.confirm.onError = "http://failure2"
+    modifiedConfig.subscriptionConfig.website.optIn.onError = "http://failure"
+    modifiedConfig.subscriptionConfig.website.confirmed.onError = "http://failure2"
     const { subscription, confirmation } = setupErrorTest(modifiedConfig, errorMailer)
     expect(subscription).rejects.toEqual(new Redirection("http://failure"))
     expect(confirmation).rejects.toEqual(new Redirection("http://failure2"))
