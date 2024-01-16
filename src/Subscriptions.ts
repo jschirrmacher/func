@@ -26,7 +26,7 @@ export default (
   logger: Logger = Logger(),
   { readJSON, mkdirp } = Files(),
 ) => {
-  const subscriptionTargets = config.subscriptionTargets
+  const subscriptionTargets = config.subscriptionConfig
   const subscriptionDataDir = join(config.dataDir, "subscriptions")
 
   async function subscription(targetId: string, code: string, email?: string) {
@@ -86,8 +86,8 @@ export default (
     const code = randomUUID()
     const link = `${config.baseUrl}/subscriptions/${targetId}/confirmations/${code}`
     await subscription(targetId, code, email)
-    return await sendMail(email, target.request, {
-      name: target.name,
+    return await sendMail(email, target.optIn, {
+      title: target.title,
       from: target.from,
       email,
       link,
@@ -98,8 +98,8 @@ export default (
     const target = getTarget(targetId)
     const data = await subscription(targetId, code)
     await data.confirm()
-    return await sendMail(target.admin, target.confirm, {
-      name: target.name,
+    return await sendMail(target.recipient, target.confirmed, {
+      title: target.title,
       from: target.from,
       email: data.email,
     })
