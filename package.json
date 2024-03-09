@@ -44,7 +44,7 @@
   "dependencies": {
     "express": "^4.18.3",
     "mustache": "^4.2.0",
-    "nodemailer": "^6.9.11",
+    "nodemailer": "^6.9.12",
     "useful-typescript-functions": "^4.0.7"
   }
 }
