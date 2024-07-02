@@ -27,8 +27,8 @@
     "@types/node": "^20.14.9",
     "@types/nodemailer": "^6.4.15",
     "@types/supertest": "6.0.2",
-    "@typescript-eslint/eslint-plugin": "^7.14.1",
-    "@typescript-eslint/parser": "^7.14.1",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
     "@vitest/coverage-v8": "^1.6.0",
     "eslint": "8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -38,7 +38,7 @@
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "tsx": "4.16.0",
-    "typescript": "^5.5.2",
+    "typescript": "^5.5.3",
     "vitest": "^1.6.0"
   },
   "dependencies": {
