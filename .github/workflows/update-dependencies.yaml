@@ -61,4 +61,4 @@ jobs:
         if: steps.gitCheck.outputs.modified == 'true'
         run: gh pr merge --merge --auto "1"
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
