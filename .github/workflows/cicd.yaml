@@ -60,8 +60,6 @@ jobs:
       - setup
       - unit-tests
     steps:
-      - name: Install curl
-        run: sudo apt-get install -y curl openssl
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Docker meta
