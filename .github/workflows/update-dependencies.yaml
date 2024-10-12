@@ -14,7 +14,8 @@ jobs:
       - name: Setup nodejs version
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "lts/*"
+          check-latest: true
 
       - name: Install dependencies
         run: npm ci
@@ -59,6 +60,6 @@ jobs:
 
       - name: Enable auth-merge
         if: steps.gitCheck.outputs.modified == 'true'
-        run: gh pr merge --rebase --auto "1"
+        run: gh pr merge --rebase --auto "${{ steps.createPR.outputs.pull-request-number }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
