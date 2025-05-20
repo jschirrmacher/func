@@ -1,6 +1,12 @@
 {
-  "extends": ["docker:disableMajor", "group:recommended", "group:monorepos"],
-  "labels": ["Renovate"],
+  "extends": [
+    "docker:disableMajor",
+    "group:recommended",
+    "group:monorepos"
+  ],
+  "labels": [
+    "Renovate"
+  ],
   "requireConfig": false,
   "onboarding": false,
   "pinDigests": true,
@@ -9,20 +15,35 @@
   "golang": {
     "enabled": false
   },
-  "schedule": ["at 5:00 pm on Saturday"],
+  "schedule": [
+    "at 5:00 pm on Saturday"
+  ],
   "packageRules": [
     {
-      "matchPackagePatterns": ["^husky$"],
-      "updateTypes": ["major"],
+      "matchPackagePatterns": [
+        "^husky$"
+      ],
+      "updateTypes": [
+        "major"
+      ],
       "enabled": false
     },
     {
-      "updateTypes": ["minor", "patch", "pin", "digest"],
+      "updateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
       "automerge": true
     },
     {
-      "datasources": ["docker"],
-      "packageNames": ["node"],
+      "datasources": [
+        "docker"
+      ],
+      "packageNames": [
+        "node"
+      ],
       "allowedVersions": "!/^17\\./"
     },
     {
@@ -30,6 +51,13 @@
       "matchPackagePrefixes": [
         "vite",
         "^@vitejs/"
+      ]
+    },
+    {
+      "groupName": "vitest",
+      "matchPackagePatterns": [
+        "vitest",
+        "@vitest/coverage-v8"
       ]
     },
     {
