@@ -1,6 +1,6 @@
 import express from "express"
 import request from "supertest"
-import { Logger, Mailer, Redirection, setupServer } from "useful-typescript-functions"
+import { Logger, Mailer, Redirection, RestError, setupServer } from "useful-typescript-functions"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import Subscriptions from "./Subscriptions"
@@ -13,23 +13,15 @@ const target = {
   title,
   from: "noreply@my-server",
   recipient: "admin@my-server",
-  optIn: {
-    subject: "subscription",
-    html: "{{ email }} registered at {{ dest }}",
-  },
-  confirmed: {
-    subject: "subscription",
-    html: "{{ email }} registered at {{ dest }}",
-  },
+  optIn: { subject: "subscription", html: "{{ email }} registered at {{ dest }}" },
+  confirmed: { subject: "subscription", html: "{{ email }} registered at {{ dest }}" },
 }
 
 const config: BackendConfig = {
   baseUrl: "http://localhost",
   dataDir: ".",
   smtp: { host: "", port: 0, auth: { user: "", pass: "" } },
-  subscriptionConfig: {
-    website: target,
-  },
+  subscriptionConfig: { website: target },
 }
 
 const logger = Logger()
@@ -119,7 +111,7 @@ describe("Subscriptions", () => {
     logger.expect({ level: "error", message: "destination: 'non-existing' not found" })
     const { createSubscription } = Subscriptions(config, { send: vi.fn() }, logger)
     await expect(createSubscription("non-existing", recipient)).rejects.toEqual(
-      new Error("Configuration for target not found"),
+      new RestError(404, "Configuration for target not found"),
     )
   })
 
@@ -128,15 +120,19 @@ describe("Subscriptions", () => {
     modifiedConfig.subscriptionConfig.website.optIn.onSuccess = "http://success"
     modifiedConfig.subscriptionConfig.website.confirmed.onSuccess = "http://success2"
     const { subscription, confirmation } = setupErrorTest(modifiedConfig, { send: vi.fn() })
-    expect(subscription).rejects.toEqual(new Redirection("http://success"))
-    expect(confirmation).rejects.toEqual(new Redirection("http://success2"))
+    await expect(subscription).rejects.toEqual(new Redirection("http://success"))
+    await expect(confirmation).rejects.toEqual(new Redirection("http://success2"))
   })
 
   it("should report errors when sending the mail", async () => {
     logger.expect({ level: "error", message: "Test error" })
     const { subscription, confirmation } = setupErrorTest(config, errorMailer)
-    expect(subscription).rejects.toEqual(new Error("Error sending email: Test error"))
-    expect(confirmation).rejects.toEqual(new Error("Error sending email: Test error"))
+    await expect(subscription).rejects.toEqual(
+      new RestError(500, "Error sending email: Test error"),
+    )
+    await expect(confirmation).rejects.toEqual(
+      new RestError(500, "Error sending email: Test error"),
+    )
   })
 
   it("should redirect in case of errors", async () => {
@@ -144,7 +140,7 @@ describe("Subscriptions", () => {
     modifiedConfig.subscriptionConfig.website.optIn.onError = "http://failure"
     modifiedConfig.subscriptionConfig.website.confirmed.onError = "http://failure2"
     const { subscription, confirmation } = setupErrorTest(modifiedConfig, errorMailer)
-    expect(subscription).rejects.toEqual(new Redirection("http://failure"))
-    expect(confirmation).rejects.toEqual(new Redirection("http://failure2"))
+    await expect(subscription).rejects.toEqual(new Redirection("http://failure"))
+    await expect(confirmation).rejects.toEqual(new Redirection("http://failure2"))
   })
 })
