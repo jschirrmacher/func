@@ -1,4 +1,4 @@
-FROM node:20-alpine as build
+FROM node:22-alpine AS build
 WORKDIR /app
 ADD . /app
 
@@ -10,11 +10,11 @@ RUN npm ci && \
     mv /app/node_modules /app/dist/* /build && \
     mv /app/package.json /app/docker-entrypoint.sh /build
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 USER node
 COPY --from=build /build /app
 
 ENV NODE_ENV=production
 
-ENTRYPOINT /app/docker-entrypoint.sh
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
