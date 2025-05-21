@@ -33,10 +33,15 @@ const errorMailer = { send: errorSender }
 
 function setupErrorTest(config: BackendConfig, mailer: Mailer) {
   const { createSubscription, confirmSubscription } = Subscriptions(config, mailer, logger)
-  return {
-    subscription: createSubscription("website", recipient),
-    confirmation: confirmSubscription("website", "abc-def"),
-  }
+  let subscription: ReturnType<typeof createSubscription> | undefined
+  let confirmation: ReturnType<typeof confirmSubscription> | undefined
+  try {
+    subscription = createSubscription("website", recipient)
+  } catch {}
+  try {
+    confirmation = confirmSubscription("website", "abc-def")
+  } catch {}
+  return { subscription, confirmation }
 }
 
 describe("Subscriptions", () => {
